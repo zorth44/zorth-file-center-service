@@ -1,0 +1,10 @@
+[server]
+address = ":8492"
+
+[database]
+driver = "mysql"
+host = "124.223.75.26"
+port = 3306
+user = "nicolaszorth"
+password = "Yannian002."
+dbname = "zorth_blog"
