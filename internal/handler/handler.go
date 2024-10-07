@@ -128,11 +128,16 @@ func (h *Handler) downloadFileHandler(c *gin.Context) {
 		}
 	}
 
+	// 设置 Content-Disposition 头部
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", file.Filename))
+
 	// 提供文件下载
-	c.FileAttachment(file.Filepath, file.Filename)
+	c.File(file.Filepath)
 
 	// 更新下载次数
-	h.db.Model(&file).Update("DownloadCount", gorm.Expr("DownloadCount + ?", 1))
+	if err := h.db.Model(&file).Update("download_count", gorm.Expr("download_count + ?", 1)).Error; err != nil {
+		fmt.Printf("Error updating download count: %v\n", err)
+	}
 
 	// 记录活动日志
 	activityLog := model.ActivityLog{
@@ -140,7 +145,9 @@ func (h *Handler) downloadFileHandler(c *gin.Context) {
 		Action:  "download",
 		Details: c.ClientIP(),
 	}
-	h.db.Create(&activityLog)
+	if err := h.db.Create(&activityLog).Error; err != nil {
+		fmt.Printf("Error creating activity log: %v\n", err)
+	}
 }
 
 func (h *Handler) deleteFileHandler(c *gin.Context) {
@@ -214,7 +221,7 @@ func (h *Handler) renameFileHandler(c *gin.Context) {
 
 func (h *Handler) getFilesHandler(c *gin.Context) {
 	var files []model.File
-	result := h.db.Find(&files)
+	result := h.db.Order("created_at DESC").Find(&files)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法获取文件列表"})
 		return

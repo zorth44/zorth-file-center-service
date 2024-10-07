@@ -33,7 +33,13 @@ func main() {
 
 	// 设置Gin路由
 	r := gin.Default()
-	r.Use(cors.Default())
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:8080"}, // 替换为您的前端URL
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Disposition"},
+		AllowCredentials: true,
+	}))
 	h.SetupRoutes(r)
 
 	// 启动服务器
